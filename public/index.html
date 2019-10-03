@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.dev.js"></script>
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+  
+
+    <link rel="stylesheet" href="styles.css" />
+
+    <title>Chat teste</title>
+  </head>
+  <body>
+    
+    <form id="chat">
+      <input type="text" name="username" placeholder="username"/>
+      <div class="messages"></div>
+      <input type="text" name="message" placeholder="mensagem"/>
+      <button type="submit">Enviar</button>
+    </form>
+
+    <script type="text/javascript">
+    
+      var socket = io('http://localhost:3000');
+
+      function renderMessage(message){
+        $(".messages").append("<div class='message'> <strong>"+ message.author +"</strong>: "+message.message+" </div>");
+      }
+
+      //Carraga mensagens antigas
+      socket.on('previousMessage',function(messages){
+        for( message of messages){
+          renderMessage(message);
+        }
+      });
+
+      //Recebe as mensagens enviadas do servidor
+      socket.on('receivedMessage', function(message){
+        renderMessage(message);
+      });
+
+
+      //Envia a mensagem
+      $("#chat").submit( function(event){
+        event.preventDefault();
+
+        var author = $("input[name=username]").val();
+        var message = $("input[name=message]").val();
+
+        
+        //Se os campos nao estiverem vazios, envia pro socket
+        if( author.length && message.length ){
+          
+          // Objeto da mensagem
+          var messageObject = {
+            author:author,
+            message:message
+          };
+
+          //Renderiza a mensagem na tela local
+          renderMessage(messageObject);
+
+          //Manda pro servidor distriuir
+          socket.emit("sendMessage",messageObject);
+        }
+
+      });
+    
+    </script>
+
+  </body>
+</html>
